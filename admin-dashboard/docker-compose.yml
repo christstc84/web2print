@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # MariaDB Database
+  database:
+    image: mariadb:10.11
+    container_name: printme-database
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: PrintMe
+      MYSQL_USER: chris
+      MYSQL_PASSWORD: AvaHazel2020!
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - printme-network
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: printme-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_USER: chris
+      DB_PASSWORD: AvaHazel2020!
+      DB_NAME: PrintMe
+      FRONTEND_URL: http://localhost
+    ports:
+      - "3001:3001"
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      - database
+    networks:
+      - printme-network
+
+  # Frontend React App
+  frontend:
+    build: .
+    container_name: printme-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - printme-network
+
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: printme-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - printme-network
+
+volumes:
+  mariadb_data:
+  backend_uploads:
+
+networks:
+  printme-network:
+    driver: bridge
