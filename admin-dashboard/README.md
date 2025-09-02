@@ -38,7 +38,7 @@ The `.env` file is already configured with your database credentials:
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=chris
-DB_PASSWORD=AvaHazel2020!
+DB_PASSWORD=
 DB_NAME=PrintMe
 ```
 
